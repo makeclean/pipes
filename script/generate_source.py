@@ -2,7 +2,18 @@
 
 from pyne.mesh import Mesh, IMeshTag
 from pyne.dagmc import load, discretize_geom, get_volume_list, point_in_volume, ray_iterator
+from itaps import iMesh, iBase
 from math import sqrt
+
+"""
+Given the mesh instance and a tetrahedra entity handle
+determine the centroid of the tet
+"""                            
+def get_tet_centre(mesh,tetrahedron_eh):
+    coords = mesh.getVtxCoords(tetrahedron_eh)
+    print len(coords)
+    return coords
+
 
 """ 
 DAGMC function to return the current volume id given the point
@@ -57,11 +68,18 @@ direction list of direction vectors
 speed list of speed since start
 
 """
-def get_all_cells_detailed(xyz,direction,speed):
+def get_all_cells_detailed(mesh,xyz,direction,speed):
     num_of_steps = len(xyz)
     time = 0.0
 
     volumes = {}
+    
+    # get the tag handle
+    tag1 = mesh.getTagHandle("vol_id")
+
+    # get all tets in the mesh set
+    tets = mesh.getEntities(iBase.Type.all,iMesh.Topology.tetrahedron)
+
     
     # loop over the substeps
     for i in range(0,num_of_steps-1):
@@ -146,6 +164,8 @@ volumes = get_all_cells(xyz,direction,speed)
 # but tag each tet in the range with right source strength 
 
 dump = get_all_cells_detailed(xyz,direction,speed,mesh)
+
+sys.exit()
 
 # now tag all intities with the appropriate
 source_strength = []
