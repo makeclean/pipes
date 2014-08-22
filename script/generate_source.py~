@@ -1,0 +1,41 @@
+#!/usr/env/python
+
+from pyne.mesh import Mesh, IMeshTag
+from pyne.dagmc import load, discretize_geom, get_volume_list, point_in_volume
+
+
+""" 
+DAGMC function to return the current volume id given the point
+xyz
+"""
+def determine_volid(xyz):
+    vol_list = get_volume_list()
+    for vol in vol_list:
+        if point_in_volume(vol,xyz) == 1:
+            return vol
+    return 0
+
+
+mesh = Mesh(mesh="../geom/model_1_mesh3d.h5m")
+
+# load dag geometry
+load("../geom/model_1_geom.h5m")
+
+# discretise geom onto mesh
+cell_fracs = discretize_geom(mesh)
+
+mesh.vol_id = IMeshTag(1,int)
+mesh.source_strength = IMeshTag(1,float)
+id_list = []
+for element in cell_fracs:
+    id_list.append(element["cell"])
+
+mesh.vol_id[:]=id_list
+
+# loop along path, use point in volume to determine the vol id 
+xyz=[0.0, 0.0, -45.0]
+print determine_volid(xyz)
+
+# print the cell fracs
+mesh.mesh.save("../geom/test.vtk")
+
