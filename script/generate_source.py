@@ -39,19 +39,47 @@ def get_all_cells(xyz,direction,speed):
         ycomp = (xyz[i][1]-xyz[i+1][1])**2
         zcomp = (xyz[i][2]-xyz[i+1][2])**2
         dist_lim = sqrt(xcomp+ycomp+zcomp)
-        print volid
-        print xyz[i]
-        print direction[i]
-        print dist_lim
+
+        # now do the rayfire
+        for (vol,dist,surf) in ray_iterator(volid, xyz[i], direction[i],dist_limit=dist_lim):
+            time += dist/speed[i]
+            volumes[vol]=time
+
+    return volumes
+
+"""
+Step along the ray finding the midpoint and therefore then all 
+point in volume for the midpoint. Then return list of all cells and the time
+since start
+
+xyz list of coordinates
+direction list of direction vectors
+speed list of speed since start
+
+"""
+def get_all_cells_detailed(xyz,direction,speed):
+    num_of_steps = len(xyz)
+    time = 0.0
+
+    volumes = {}
+    
+    # loop over the substeps
+    for i in range(0,num_of_steps-1):
+        # find the volid of the origin
+        volid = determine_volid(xyz[i])
+        xcomp = (xyz[i][0]-xyz[i+1][0])**2
+        ycomp = (xyz[i][1]-xyz[i+1][1])**2
+        zcomp = (xyz[i][2]-xyz[i+1][2])**2
+        dist_lim = sqrt(xcomp+ycomp+zcomp)
 
 
         # now do the rayfire
         for (vol,dist,surf) in ray_iterator(volid, xyz[i], direction[i],dist_limit=dist_lim):
             time += dist/speed[i]
             volumes[vol]=time
-            print vol,dist, time
+            
+        # now get the tets that have volumes tags int the dictionary
 
-    print volumes
 
     return volumes
 
@@ -113,6 +141,11 @@ mesh.vol_id[:]=id_list
 
 # loop along path, use point in volume to determine the vol id 
 volumes = get_all_cells(xyz,direction,speed)
+
+# loop along path, use point in volume to determine the vol id 
+# but tag each tet in the range with right source strength 
+
+dump = get_all_cells_detailed(xyz,direction,speed,mesh)
 
 # now tag all intities with the appropriate
 source_strength = []
